@@ -2,7 +2,7 @@
 """
 Created on Mon Jan 24 21:17:27 2022
 
-@author: mrgna
+@author: Magnus Frandsen
 """
 
 import numpy as np
@@ -163,8 +163,7 @@ if __name__ == '__main__':
     
     #Generate seeds
     np.random.seed(None)
-    seedPolygon = np.random.randint(0,2**20,1)[0]
-    seedColor = np.random.randint(0,2**20,1)[0]
+    seedPolygon, seedColor = np.random.randint(0,2**20,2)
     
     print('Polygon Selection: ',polygonSelectionMethod)
     print('Edge Selection:',edgeSelectionMethod)
