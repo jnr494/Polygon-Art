@@ -19,7 +19,7 @@ def randomPolygon(polygons):
     return np.random.randint(n,size = 1)[0]
 
 def getAreaofPolygon(polygon):
-    areaterms = [x1*y2-x2*y1 for (x1,x2),(y1,y2) in zip(polygon,polygon[1:] + polygon[:1])]
+    areaterms = [x1*y2-x2*y1 for (x1,y1),(x2,y2) in zip(polygon,polygon[1:] + polygon[:1])]
     area = np.abs(np.sum(areaterms)/2)
     return area
 
@@ -31,12 +31,34 @@ def SmallestPolygon(polygons):
     areas = [getAreaofPolygon(polygon) for polygon in polygons]
     return np.argmin(areas)
     
+def weightedPolygon(polygons):
+    areas = [getAreaofPolygon(polygon) for polygon in polygons]
+    probabilities = areas/np.sum(areas)
+    return np.random.choice(range(len(polygons)),size = 1,p=probabilities)[0]
+
+
 #Edge functions
 
 def randomEdges(polygon):
     n = len(polygon)
-    chosenEdges = np.sort(np.random.choice(range(n),size = 2, replace = False))
-    return chosenEdges
+    chosenEdges = np.random.choice(range(n),size = 2, replace = False)
+    return np.sort(chosenEdges)
+
+def getEdgeLengths(polygon):
+    return [np.sqrt((x2-x1)**2+(y2-y1)**2) for (x1,y1),(x2,y2) in zip(polygon,polygon[1:] + polygon[:1])]
+    
+def longestEdges(polygon):
+    edgelengths = getEdgeLengths(polygon)
+    chosenEdge1 = np.argmax(edgelengths)
+    edgelengths[chosenEdge1]=0
+    chosenEdge2 = np.argmax(edgelengths)
+    return np.sort([chosenEdge1,chosenEdge2])
+
+def weightedEdges(polygon):
+    edgelengths = getEdgeLengths(polygon)
+    probabilities = edgelengths/np.sum(edgelengths)
+    chosenEdges = np.random.choice(range(len(polygon)),size = 2, replace = False,p=probabilities)
+    return np.sort(chosenEdges)
 
 def RandomPointOnEdge(polygon, chosenEdge):
     point1 = np.array(polygon[chosenEdge])
@@ -56,20 +78,28 @@ def RandomPointOnEdge(polygon, chosenEdge):
 
 #Main Functions
 
-def newPolygons(polygons,dividemethod = 'largest'):
+def newPolygons(polygons,polygonSelectionMethod = 'largest', edgeSelectionMethod = 'random'):
     #choose polygon
-    if dividemethod == 'largest':
+    if polygonSelectionMethod == 'largest':
         chosenPolygon = LargestPolygon(polygons)
-    elif dividemethod == 'smallest':
+    elif polygonSelectionMethod == 'smallest':
         chosenPolygon = SmallestPolygon(polygons)
-    elif dividemethod == 'random':
+    elif polygonSelectionMethod == 'weighted':
+        chosenPolygon = weightedPolygon(polygons)
+    elif polygonSelectionMethod == 'random':
         chosenPolygon = randomPolygon(polygons)
     else:
         chosenPolygon = randomPolygon(polygons)
     
     #choose edge
-    chosenEdges = randomEdges(polygons[chosenPolygon])
-    
+    if edgeSelectionMethod == 'longest':
+        chosenEdges = longestEdges(polygons[chosenPolygon])
+    elif edgeSelectionMethod == 'weighted':
+        chosenEdges = weightedEdges(polygons[chosenPolygon])
+    elif edgeSelectionMethod == 'random':
+        chosenEdges = randomEdges(polygons[chosenPolygon])
+    else:
+        chosenEdges = randomEdges(polygons[chosenPolygon])
     
     newPoints = [RandomPointOnEdge(polygons[chosenPolygon],i) for i in chosenEdges]
     
@@ -88,11 +118,11 @@ def newPolygons(polygons,dividemethod = 'largest'):
     
     return newPolygons
 
-def generatePolygons(nPolygons,length = 1, dividemethod='largest'):
+def generatePolygons(nPolygons,length = 1, polygonSelectionMethod='largest', edgeSelectionMethod = 'random'):
     polygons = initArea(length,1)
     for _ in range(nPolygons-1):
         
-        polygons = newPolygons(polygons,dividemethod=dividemethod)
+        polygons = newPolygons(polygons,polygonSelectionMethod=polygonSelectionMethod, edgeSelectionMethod=edgeSelectionMethod)
     return polygons
 
 #Plot functions
@@ -106,7 +136,7 @@ def plotPolygonsAx(polygons, ax, edgecolor='w', linewidth=10, colorgenerator = l
     for polygon in polygons:
         color = colorgenerator()
         xpolygon = Polygon(np.array(polygon),
-                           alpha=0.9,
+                           alpha=1,
                            facecolor = color,
                            edgecolor=edgecolor,
                            linewidth=linewidth)
@@ -127,7 +157,8 @@ def plotPolygons(polygons,length=1):
 
 if __name__ == '__main__':
     length = 16/9 #as ratio from height
-    dividemethod = 'largest' #choose from 'largest', 'smallest' and 'random'
+    polygonSelectionMethod = 'largest' #choose from 'largest', 'smallest', 'weighted' and 'random'
+    edgeSelectionMethod = 'weighted' #choose from 'longest', 'weighted' and 'random' 
     nPolygons = 10
     
     #Generate seeds
@@ -135,17 +166,18 @@ if __name__ == '__main__':
     seedPolygon = np.random.randint(0,2**20,1)[0]
     seedColor = np.random.randint(0,2**20,1)[0]
     
+    print('Polygon Selection: ',polygonSelectionMethod)
+    print('Edge Selection:',edgeSelectionMethod)
     print("Polygon seed:", seedPolygon)
     print("Color seed:", seedColor)
     
     #Generate polygons
     np.random.seed(seedPolygon)
-    polygons = generatePolygons(nPolygons,length,dividemethod)
+    polygons = generatePolygons(nPolygons,length,polygonSelectionMethod, edgeSelectionMethod)
     
     #Plot polygons
     np.random.seed(seedColor)
-    plotPolygons(polygons,length)
-    
+    plotPolygons(polygons,length) 
     
     
 
