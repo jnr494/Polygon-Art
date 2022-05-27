@@ -47,7 +47,7 @@ def RandomPointOnEdge(polygon, chosenEdge):
     
     angle = np.arctan2(PointsDiff[1],PointsDiff[0])
     
-    placeOnEdge = np.random.uniform(size = 1,low=0.25,high=0.75)[0]
+    placeOnEdge = np.random.uniform(size = 1,low=0.3,high=0.7)[0]
     newLength = placeOnEdge * lengthOfEdge
 
     newPoint = (point1[0] + newLength*np.cos(angle),point1[1] + newLength*np.sin(angle))
@@ -73,10 +73,6 @@ def newPolygons(polygons,dividemethod = 'largest'):
     
     newPoints = [RandomPointOnEdge(polygons[chosenPolygon],i) for i in chosenEdges]
     
-    print(chosenPolygon)
-    print(chosenEdges)
-    print(newPoints)
-    
     newPolygons = []
     for i, polygon in enumerate(polygons):
         if i == chosenPolygon:
@@ -95,6 +91,7 @@ def newPolygons(polygons,dividemethod = 'largest'):
 def generatePolygons(nPolygons,length = 1, dividemethod='largest'):
     polygons = initArea(length,1)
     for _ in range(nPolygons-1):
+        
         polygons = newPolygons(polygons,dividemethod=dividemethod)
     return polygons
 
@@ -133,10 +130,20 @@ if __name__ == '__main__':
     dividemethod = 'largest' #choose from 'largest', 'smallest' and 'random'
     nPolygons = 10
     
+    #Generate seeds
+    np.random.seed(None)
+    seedPolygon = np.random.randint(0,2**20,1)[0]
+    seedColor = np.random.randint(0,2**20,1)[0]
+    
+    print("Polygon seed:", seedPolygon)
+    print("Color seed:", seedColor)
+    
     #Generate polygons
+    np.random.seed(seedPolygon)
     polygons = generatePolygons(nPolygons,length,dividemethod)
     
     #Plot polygons
+    np.random.seed(seedColor)
     plotPolygons(polygons,length)
     
     
